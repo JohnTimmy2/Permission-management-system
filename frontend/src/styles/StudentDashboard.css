@@ -2037,11 +2037,10 @@ body, html, #root {
   font-size: 22px;
   cursor: pointer;
   color: #0f172a;
-  padding: 6px 6px 6px 0;
+  padding: 6px;
   border-radius: 10px;
   line-height: 1;
   transition: background 0.15s;
-  margin-left: 0;
 }
 .hamburger-btn:hover { background: #f1f5f9; }
 
