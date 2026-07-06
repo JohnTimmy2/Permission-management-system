@@ -1,5 +1,5 @@
 import {
-  AlertTriangle, BookOpen, Calendar, FileText, BarChart3, XCircle,
+  AlertTriangle, BookOpen, Calendar, Tag, FileText, BarChart3, XCircle,
   ImageIcon, Check, X, ChevronDown,
 } from "./icons";
 
@@ -58,6 +58,7 @@ export default function StudentRequestGroup({ studentName, studentId, groupName,
                 <span className={`lec-status-pill ${statusClass}`}>{req.status || "Pending"}</span>
               </div>
               <div className="lec-detail-row"><span><Calendar size={14} /></span><span>{req.request_date ? new Date(req.request_date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "—"}</span></div>
+              <div className="lec-detail-row"><span><Tag size={14} /></span><span>{req.term || "Term 1"}</span></div>
               <div className="lec-detail-row"><span><FileText size={14} /></span><span className="lec-reason-text">{req.reason}</span></div>
               {info && (
                 <div className={`lec-absence-badge ${info.status}`} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>

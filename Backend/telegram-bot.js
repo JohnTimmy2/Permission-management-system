@@ -81,6 +81,7 @@ async function notifyLecturer(db, request) {
       `🎓 *Group:* ${escapeMd(request.group_name)}\n` +
       `📖 *Subject:* ${escapeMd(request.subject_name)} — ${escapeMd(request.class_time || "")}\n` +
       `📅 *Date:* ${escapeMd(dateStr)}\n` +
+      `🏷️ *Term:* ${escapeMd(request.term || "Term 1")}\n` +
       `📝 *Reason:* ${escapeMd(request.reason || "")}`;
 
     const reply_markup = {
@@ -96,8 +97,9 @@ async function notifyLecturer(db, request) {
       : null;
 
     for (const row of rows) {
+      let sent;
       if (photoUrl) {
-        await tgCall("sendPhoto", {
+        sent = await tgCall("sendPhoto", {
           chat_id: row.telegram_chat_id,
           photo: photoUrl,
           caption: text,
@@ -105,15 +107,43 @@ async function notifyLecturer(db, request) {
           reply_markup,
         });
       } else {
-        await tgCall("sendMessage", {
+        sent = await tgCall("sendMessage", {
           chat_id: row.telegram_chat_id,
           text,
           parse_mode: "Markdown",
           reply_markup,
         });
       }
+      // Remember this message so a later edit can delete + resend it
+      if (sent && sent.ok && sent.result) {
+        db.query(
+          "INSERT INTO telegram_notifications (request_id, chat_id, message_id) VALUES (?, ?, ?)",
+          [request.request_id, row.telegram_chat_id, sent.result.message_id],
+          (insErr) => { if (insErr) console.log("telegram_notifications insert error:", insErr); }
+        );
+      }
     }
   });
+}
+
+// Called from server.js when a student edits a pending request — deletes the
+// old Telegram notification(s) for this request and sends a fresh one.
+async function renotifyLecturer(db, request) {
+  if (!TELEGRAM_BOT_TOKEN) return;
+  db.query(
+    "SELECT chat_id, message_id FROM telegram_notifications WHERE request_id = ?",
+    [request.request_id],
+    async (err, rows) => {
+      if (!err && rows && rows.length > 0) {
+        for (const row of rows) {
+          await tgCall("deleteMessage", { chat_id: row.chat_id, message_id: row.message_id });
+        }
+        db.query("DELETE FROM telegram_notifications WHERE request_id = ?", [request.request_id]);
+      }
+      // Send a fresh notification with the updated details (same as a new submission)
+      notifyLecturer(db, request);
+    }
+  );
 }
 
 // Escape special Markdown chars so weird student names/reasons don't break formatting
@@ -260,4 +290,4 @@ async function handleWebhook(db, update, res) {
   res.sendStatus(200); // always acknowledge Telegram
 }
 
-export { setWebhook, notifyLecturer, handleWebhook, linkForLecturer, BOT_USERNAME };
+export { setWebhook, notifyLecturer, renotifyLecturer, handleWebhook, linkForLecturer, BOT_USERNAME };

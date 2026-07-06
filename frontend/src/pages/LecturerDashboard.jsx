@@ -26,6 +26,8 @@ function LecturerDashboard() {
   // Pagination per group
   const [groupPages, setGroupPages] = useState({ all: 1, 1: 1, 2: 1, 3: 1, 4: 1 });
   const ITEMS_PER_PAGE = 3;
+  // Term tab (Requests + Absence Tracker)
+  const [activeTerm, setActiveTerm] = useState("Term 1");
 
   // Reject modal
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -189,8 +191,9 @@ function LecturerDashboard() {
     return { approved, total: ABSENCE_TOTAL_SESSIONS, percent, status };
   };
 
-  // Per-student absence summary for the Absence Tracker page
-  const studentsAbsence = groupByStudent(requests).map((g) => {
+  // Per-student absence summary for the Absence Tracker page (term filtered)
+  const absenceSource = requests.filter((r) => (r.term || "Term 1") === activeTerm);
+  const studentsAbsence = groupByStudent(absenceSource).map((g) => {
     const subjects = [...new Set(g.requests.map((r) => r.subject_name))].map((subject) => ({
       subject,
       ...getAbsenceInfo(g.studentId, subject),
@@ -201,9 +204,10 @@ function LecturerDashboard() {
   // Groups available
   const groupNames = ["SE Group 1", "SE Group 2", "SE Group 3", "SE Group 4"];
 
-  // Requests filtered by group tab + search + status
+  // Requests filtered by term + group tab + search + status
   const getGroupRequests = (groupLabel) => {
     return requests.filter(r => {
+      const matchTerm = (r.term || "Term 1") === activeTerm;
       const matchGroup = groupLabel === "all" || r.group_name === groupLabel;
       const matchSearch =
         !searchTerm ||
@@ -215,7 +219,7 @@ function LecturerDashboard() {
         (statusFilter === "pending" && r.status?.toLowerCase() === "pending") ||
         (statusFilter === "accepted" && ["accepted", "accept", "approved"].includes(r.status?.toLowerCase())) ||
         (statusFilter === "rejected" && ["rejected", "reject"].includes(r.status?.toLowerCase()));
-      return matchGroup && matchSearch && matchStatus;
+      return matchTerm && matchGroup && matchSearch && matchStatus;
     });
   };
 
@@ -243,6 +247,16 @@ function LecturerDashboard() {
   const initials = lecturerName
     ? lecturerName.split(" ").map(n => n[0]).join("").toUpperCase()
     : "LC";
+
+  const termTabs = (
+    <div className="term-tabs" style={{ marginBottom: "20px" }}>
+      {["Term 1", "Term 2", "Term 3"].map((t) => (
+        <button key={t} className={`term-tab ${activeTerm === t ? "term-tab-active" : ""}`} onClick={() => setActiveTerm(t)}>
+          {t}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="dashboard-container">
@@ -276,6 +290,7 @@ function LecturerDashboard() {
 
         {activeMenu === "requests" && (
           <LecturerRequestsView
+            termTabs={termTabs}
             searchTerm={searchTerm} setSearchTerm={setSearchTerm}
             statusFilter={statusFilter} setStatusFilter={setStatusFilter}
             activeGroup={activeGroup} setActiveGroup={setActiveGroup} setGroupPages={setGroupPages}
@@ -290,6 +305,7 @@ function LecturerDashboard() {
 
         {activeMenu === "absence" && (
           <LecturerAbsenceView
+            termTabs={termTabs}
             studentsAbsence={studentsAbsence} fetchRequests={fetchRequests}
             ABSENCE_TOTAL_SESSIONS={ABSENCE_TOTAL_SESSIONS} ABSENCE_FAIL_THRESHOLD={ABSENCE_FAIL_THRESHOLD}
           />

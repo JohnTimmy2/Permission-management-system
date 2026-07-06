@@ -238,8 +238,7 @@ function StudentDashboard() {
           formData.append("subject_name", selectedSubjects[i]);
           formData.append("class_time", selectedTimes[i]);
           formData.append("term", activeTerm);
-          // Only attach the photo once (first subject + first date) to avoid duplicate uploads
-          if (proofImage && i === 0 && j === 0) formData.append("proof_image", proofImage);
+          if (proofImage) formData.append("proof_image", proofImage);
 
           try {
             await axios.post("http://localhost:5000/request", formData, {

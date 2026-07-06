@@ -232,7 +232,7 @@ function roleBadgeClass(role) {
 
 export function AdminUsersView({
   userCounts, userSearch, setUserSearch, userRoleFilter, setUserRoleFilter,
-  filteredUsers, users, openAddUser, openEditUser, setDeleteUserId,
+  filteredUsers, users, openEditUser, setDeleteUserId,
 }) {
   return (
     <>
@@ -247,7 +247,6 @@ export function AdminUsersView({
         <div className="requests-section">
           <div className="section-header-row">
             <div className="card-header-title"><span><Users size={20} /></span><h2>All Users</h2></div>
-            <button className="view-all-link" onClick={openAddUser}>+ Add User</button>
           </div>
 
           <div className="view-dashboard-bar">

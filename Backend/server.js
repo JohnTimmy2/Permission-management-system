@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express from "express";
-import { setWebhook, notifyLecturer, handleWebhook, linkForLecturer, BOT_USERNAME } from "./telegram-bot.js";
+import { setWebhook, notifyLecturer, renotifyLecturer, handleWebhook, linkForLecturer, BOT_USERNAME } from "./telegram-bot.js";
 import cors from "cors";
 import crypto from "crypto";
 import multer from "multer";
@@ -174,7 +174,7 @@ app.post("/request", upload.single("proof_image"), (req, res) => {
     notifyLecturer(db, {
       request_id: result.insertId,
       student_name, group_name, subject_name, class_time,
-      request_date, reason, proof_image_url,
+      request_date, reason, proof_image_url, term: term || "Term 1",
     });
     res.json("Request Submitted Successfully");
   });
@@ -197,6 +197,12 @@ app.put("/request/:id", upload.single("proof_image"), (req, res) => {
   db.query(sql, params, (err) => {
     if (err) { console.log(err); return res.status(500).json("Database Error"); }
     res.json("Request Updated Successfully");
+
+    // Re-notify the lecturer on Telegram: delete the old message(s) and send a fresh one
+    db.query("SELECT * FROM requests WHERE request_id = ?", [req.params.id], (selErr, rows) => {
+      if (selErr || !rows.length) return;
+      renotifyLecturer(db, rows[0]);
+    });
   });
 });
 
