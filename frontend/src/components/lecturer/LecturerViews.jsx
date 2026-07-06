@@ -151,7 +151,7 @@ export function LecturerOverviewView({
 
 /* ===================== ALL REQUESTS ===================== */
 export function LecturerRequestsView({
-  searchTerm, setSearchTerm, statusFilter, setStatusFilter,
+  termTabs, searchTerm, setSearchTerm, statusFilter, setStatusFilter,
   activeGroup, setActiveGroup, setGroupPages, counts,
   paginatedRequests, expandedStudent, setExpandedStudent, getAbsenceInfo,
   onAccept, onReject, setLightboxUrl, setPage,
@@ -163,6 +163,7 @@ export function LecturerRequestsView({
         <div className="section-header-row">
           <div className="card-header-title"><span><ClipboardList size={20} /></span><h2>All Student Requests</h2></div>
         </div>
+        {termTabs}
         <div className="view-dashboard-bar">
           <div className="search-input-wrapper">
             <span className="search-icon"><Search size={16} /></span>
@@ -235,7 +236,7 @@ export function LecturerRequestsView({
 }
 
 /* ===================== ABSENCE TRACKER ===================== */
-export function LecturerAbsenceView({ studentsAbsence, fetchRequests, ABSENCE_TOTAL_SESSIONS, ABSENCE_FAIL_THRESHOLD }) {
+export function LecturerAbsenceView({ termTabs, studentsAbsence, fetchRequests, ABSENCE_TOTAL_SESSIONS, ABSENCE_FAIL_THRESHOLD }) {
   const thresholdPercent = Math.round((ABSENCE_FAIL_THRESHOLD / ABSENCE_TOTAL_SESSIONS) * 100);
   return (
     <div className="single-column-workspace" style={{ marginTop: "32px" }}>
@@ -246,6 +247,7 @@ export function LecturerAbsenceView({ studentsAbsence, fetchRequests, ABSENCE_TO
             <RefreshCw size={14} /> Refresh
           </button>
         </div>
+        {termTabs}
         <p className="lec-absence-note">
           Approved absences per subject, counted against the {thresholdPercent}% limit
           ({ABSENCE_FAIL_THRESHOLD - 1} of {ABSENCE_TOTAL_SESSIONS} sessions allowed).

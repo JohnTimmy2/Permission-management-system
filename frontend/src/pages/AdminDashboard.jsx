@@ -477,7 +477,7 @@ const [matrixActiveTerm, setMatrixActiveTerm] = useState("Term 1");
             userCounts={userCounts} userSearch={userSearch} setUserSearch={setUserSearch}
             userRoleFilter={userRoleFilter} setUserRoleFilter={setUserRoleFilter}
             filteredUsers={filteredUsers} users={users}
-            openAddUser={openAddUser} openEditUser={openEditUser} setDeleteUserId={setDeleteUserId}
+            openEditUser={openEditUser} setDeleteUserId={setDeleteUserId}
           />
         )}
 
