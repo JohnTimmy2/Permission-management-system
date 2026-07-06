@@ -105,17 +105,19 @@ body, html, #root {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.5);
-  z-index: 40;
+  z-index: 150;
 }
 .hamburger-btn {
   display: none;
-  background: transparent;
+  background: none;
   border: none;
   font-size: 22px;
   color: #0f172a;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 8px;
+  padding: 6px;
+  border-radius: 10px;
+  line-height: 1;
+  transition: background 0.15s;
 }
 .hamburger-btn:hover { background: #f1f5f9; }
 
@@ -612,13 +614,19 @@ body, html, #root {
 
   .sidebar {
     position: fixed; top: 0; left: 0; height: 100vh;
-    z-index: 50; transform: translateX(-100%); width: 260px;
+    z-index: 200; transform: translateX(-100%); width: 280px;
   }
   .sidebar.sidebar-open { transform: translateX(0); }
   .sidebar-overlay { display: block; }
-  .hamburger-btn { display: block; }
+  .hamburger-btn { display: flex; align-items: center; }
 
-  .top-header { padding: 0 20px; height: 70px; }
+  .top-header {
+    height: auto;
+    min-height: 70px;
+    padding: 14px 16px 14px 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
   .top-header h1 { font-size: 17px; }
 
   .stats-grid { padding: 20px 16px 0; gap: 12px; }
