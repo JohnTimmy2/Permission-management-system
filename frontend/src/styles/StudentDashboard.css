@@ -2087,11 +2087,13 @@ body, html, #root {
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: none;
+    border-right: none;
   }
   .sidebar.sidebar-mobile-open,
   .sidebar.sidebar-open {
     transform: translateX(0);
     box-shadow: 8px 0 32px rgba(0,0,0,0.25);
+    border-right: 1px solid #1e293b;
   }
   .mobile-sidebar-backdrop,
   .sidebar-overlay { display: block; }
@@ -2100,17 +2102,18 @@ body, html, #root {
   .hamburger-btn { display: flex; align-items: center; }
 
   /* Main content takes full width */
-  .main-content { width: 100%; }
+  .main-content { width: 100%; overflow-x: hidden; }
 
   /* Top header */
   .top-header {
     height: auto;
     min-height: 70px;
-    padding: 14px 16px 14px 0;
+    padding: 14px 16px;
     flex-wrap: wrap;
     gap: 8px;
     position: relative;
     justify-content: center;
+    overflow: hidden;
   }
   .top-header > div:first-child {
     align-items: center !important;
