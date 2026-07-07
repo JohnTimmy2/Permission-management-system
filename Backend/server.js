@@ -99,20 +99,19 @@ app.post("/forgot-password", (req, res) => {
       const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
       transporter.sendMail(
         {
-          from: process.env.GMAIL_USER,
+          from: "onboarding@resend.dev",
           to: email,
           subject: "Reset your password — Permission Request",
           html: `<p>Hi ${userName},</p>
             <p>We received a request to reset your password. Click the link below to choose a new one:</p>
             <p><a href="${resetLink}">${resetLink}</a></p>
             <p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`,
-        },
-        (mailErr) => {
-          if (mailErr) {
-            console.log("Email send error:", mailErr);
-            return res.status(500).json({ message: "Failed to send reset email. Please try again." });
-          }
+        }
+      ).then(() => {
           res.json({ message: "A password reset link has been sent to your email." });
+        }).catch((mailErr) => {
+          console.log("Email send error:", mailErr);
+          return res.status(500).json({ message: "Failed to send reset email. Please try again." });
         }
       );
     });
