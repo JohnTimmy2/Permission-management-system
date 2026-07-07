@@ -811,9 +811,21 @@ body, html, #root {
   .top-header {
     height: auto;
     min-height: 70px;
-    padding: 14px 16px 14px 0;
-    flex-wrap: wrap;  
+    padding: 14px 16px;
+    flex-wrap: wrap;
     gap: 8px;
+    position: relative;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .top-header > div:first-child {
+    align-items: center !important;
+  }
+  .top-header h1, .top-header p { text-align: center; }
+  .notif-bell {
+    position: absolute;
+    right: 16px;
+    top: 14px;
   }
   .top-header h1 { font-size: 17px; }
 
