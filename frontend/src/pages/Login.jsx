@@ -12,6 +12,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
 
   // Forgot password modal state
@@ -22,8 +23,9 @@ function Login() {
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleLogin = async () => {
+    setLoginError("");
     if (!email || !password) {
-      alert("Please fill all fields");
+      setLoginError("Please fill all fields.");
       return;
     }
 
@@ -47,11 +49,11 @@ function Login() {
       } else if (role === "admin") {
         navigate("/admin-dashboard");
       } else {
-        alert("Unknown role: " + role);
+        setLoginError("Unknown role: " + role);
       }
     } catch (err) {
       console.log(err);
-      alert("Invalid Email or Password");
+      setLoginError("Invalid email or password.");
     }
   };
 
@@ -175,6 +177,10 @@ function Login() {
               Forgot password?
             </button>
           </div>
+
+          {loginError && (
+            <div className="forgot-message error">✕ {loginError}</div>
+          )}
 
           <button type="button" className="login-btn" onClick={handleLogin}>
             SIGN IN
