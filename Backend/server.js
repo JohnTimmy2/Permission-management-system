@@ -1,4 +1,6 @@
 import "dotenv/config";
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first"); // avoid ENETUNREACH on hosts without IPv6 egress (e.g. Gmail SMTP)
 import express from "express";
 import { setWebhook, notifyLecturer, renotifyLecturer, handleWebhook, linkForLecturer, BOT_USERNAME } from "./telegram-bot.js";
 import cors from "cors";
@@ -13,7 +15,7 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const FRONTEND_URL = "http://localhost:5173";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Multer config — saves uploaded proof photos to /uploads on disk
 const storage = multer.diskStorage({
