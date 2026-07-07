@@ -1,10 +1,14 @@
 import mysql from "mysql2";
 
+const host = process.env.DB_HOST || "localhost";
+
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "maorith252043", // put your MySQL password if you have one
-  database: "permission_system",
+  host,
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "maorith252043", // put your MySQL password if you have one
+  database: process.env.DB_NAME || "permission_system",
+  ssl: host !== "localhost" ? { rejectUnauthorized: false } : undefined,
 });
 
 db.connect((err) => {
