@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 import "../styles/StudentDashboard.css";
 
 import StudentSidebar from "../components/student/StudentSidebar";
@@ -148,7 +149,7 @@ function StudentDashboard() {
     setSearchDashboardId(storedId);
     setStudentName(storedName || "");
 
-    axios.get(`http://localhost:5000/student-requests/${storedId}`)
+    axios.get(`${API_BASE_URL}/student-requests/${storedId}`)
       .then((res) => {
         setRequests(res.data || []);
       })
@@ -180,7 +181,7 @@ function StudentDashboard() {
   const handleActualPasswordUpdate = async () => {
     if (!newPassword) return;
     try {
-      await axios.put(`http://localhost:5000/update-password/${studentId}`, { password: newPassword });
+      await axios.put(`${API_BASE_URL}/update-password/${studentId}`, { password: newPassword });
       showToast("Password updated successfully!", "#059669");
       setIsPasswordModalOpen(false);
       setNewPassword("");
@@ -214,7 +215,7 @@ function StudentDashboard() {
         formData.append("class_time", selectedTimes[0]);
         if (proofImage) formData.append("proof_image", proofImage);
 
-        await axios.put(`http://localhost:5000/request/${editingRequestId}`, formData, {
+        await axios.put(`${API_BASE_URL}/request/${editingRequestId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         showToast("Request updated successfully!", "#2563eb");
@@ -241,7 +242,7 @@ function StudentDashboard() {
           if (proofImage) formData.append("proof_image", proofImage);
 
           try {
-            await axios.post("http://localhost:5000/request", formData, {
+            await axios.post(`${API_BASE_URL}/request`, formData, {
               headers: { "Content-Type": "multipart/form-data" },
             });
             successCount++;
@@ -266,7 +267,7 @@ function StudentDashboard() {
   const confirmClearAll = async () => {
     setIsClearAllOpen(false);
     try {
-      await axios.put(`http://localhost:5000/requests/mark-viewed/${studentId}`);
+      await axios.put(`${API_BASE_URL}/requests/mark-viewed/${studentId}`);
       showToast("Notifications cleared.", "#2563eb");
       syncLogs(true);
     } catch (err) {
@@ -282,7 +283,7 @@ function StudentDashboard() {
     setSelectedSubjects([req.subject_name]);
     setSelectedTimes([req.class_time]);
     if (req.proof_image_url) {
-      setImagePreview(`http://localhost:5000${req.proof_image_url}`);
+      setImagePreview(`${API_BASE_URL}${req.proof_image_url}`);
     } else {
       setImagePreview("");
     }
@@ -304,7 +305,7 @@ function StudentDashboard() {
     const targetId = searchDashboardId.trim() || studentId;
     if (!targetId) return;
     try {
-      const res = await axios.get(`http://localhost:5000/student-requests/${targetId}`);
+      const res = await axios.get(`${API_BASE_URL}/student-requests/${targetId}`);
       setRequests(res.data || []);
       setSearchDashboardId(targetId);
       if (!silent) showToast(`Synced logs for ID: ${targetId}`, "#2563eb");

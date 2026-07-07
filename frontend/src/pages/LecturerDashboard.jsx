@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../config";
 import "../styles/LecturerDashboard.css";
 
 import LecturerSidebar from "../components/lecturer/LecturerSidebar";
@@ -66,7 +67,7 @@ function LecturerDashboard() {
   const loadAssignmentsThenRequests = async () => {
     const lecturerId = localStorage.getItem("user_id");
     try {
-      const res = await axios.get(`http://localhost:5000/lecturer-assignments/${lecturerId}`);
+      const res = await axios.get(`${API_BASE_URL}/lecturer-assignments/${lecturerId}`);
       assignmentsRef.current = res.data || [];
     } catch {
       assignmentsRef.current = [];
@@ -83,7 +84,7 @@ function LecturerDashboard() {
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/requests");
+      const res = await axios.get(`${API_BASE_URL}/requests`);
       const onlyMine = (res.data || []).filter(matchesAssignment);
       setRequests(onlyMine);
     } catch (err) {
@@ -109,7 +110,7 @@ function LecturerDashboard() {
 
   const handleAccept = async (id) => {
     try {
-      await axios.put("http://localhost:5000/request-status", { id, status: "Accepted" });
+      await axios.put(`${API_BASE_URL}/request-status`, { id, status: "Accepted" });
       showToast("Request accepted!", "#059669");
       fetchRequests();
     } catch {
@@ -130,7 +131,7 @@ function LecturerDashboard() {
     }
     setRejectLoading(true);
     try {
-      await axios.put("http://localhost:5000/request-status", {
+      await axios.put(`${API_BASE_URL}/request-status`, {
         id: rejectTargetId,
         status: "Rejected",
         reject_reason: rejectReason.trim(),

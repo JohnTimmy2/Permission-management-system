@@ -1,4 +1,5 @@
 import { LogOut, Trash2, X, Paperclip, Calendar, ExternalLink, Check } from "./icons";
+import { API_BASE_URL } from "../../config";
 
 export function StudentModals({
   isLogoutOpen, setIsLogoutOpen, confirmLogout,
@@ -42,7 +43,7 @@ export function StudentModals({
           <div className="proof-lightbox-card" onClick={(e) => e.stopPropagation()}>
             <button className="proof-lightbox-close" onClick={() => setProofLightboxUrl(null)}><X size={18} /></button>
             <div className="proof-lightbox-img-area">
-              <img src={`http://localhost:5000${proofLightboxUrl}`} alt="Proof" />
+              <img src={`${API_BASE_URL}${proofLightboxUrl}`} alt="Proof" />
             </div>
             <div className="proof-lightbox-body">
               <h3 className="proof-lightbox-title">{proofLightboxMeta?.subject} — Proof</h3>
@@ -55,7 +56,7 @@ export function StudentModals({
                 </span>
               </div>
               <a
-                href={`http://localhost:5000${proofLightboxUrl}`}
+                href={`${API_BASE_URL}${proofLightboxUrl}`}
                 target="_blank"
                 rel="noreferrer"
                 className="proof-lightbox-download"

@@ -1,6 +1,7 @@
 import { X, ChevronRight, Check, LogOut, Trash2 } from "./icons";
+import { API_BASE_URL } from "../../config";
 
-const API = "http://localhost:5000";
+const API = API_BASE_URL;
 
 /* ===================== ADD/EDIT USER ===================== */
 export function AdminUserModal({

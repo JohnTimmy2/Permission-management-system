@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/AdminDashboard.css";
+import { API_BASE_URL } from "../config";
 
 import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminTopHeader from "../components/admin/AdminTopHeader";
@@ -12,7 +13,7 @@ import {
 import { AdminUserModal, AdminLecturerMatrixModal, AdminConfirmModals } from "../components/admin/AdminModals";
 import { groupByStudent } from "../components/admin/AdminStudentGroup";
 
-const API = "http://localhost:5000";
+const API = API_BASE_URL;
 
 function AdminDashboard() {
   const navigate = useNavigate();

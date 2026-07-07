@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import "../styles/Login.css";
 
 const GRID_COLS = 12;
@@ -27,7 +28,7 @@ function Login() {
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/login", {
+      const res = await axios.post(`${API_BASE_URL}/login`, {
         email,
         password,
       });
@@ -80,7 +81,7 @@ function Login() {
 
     setForgotLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/forgot-password", {
+      const res = await axios.post(`${API_BASE_URL}/forgot-password`, {
         email: forgotEmail,
       });
       setForgotStatus("success");
