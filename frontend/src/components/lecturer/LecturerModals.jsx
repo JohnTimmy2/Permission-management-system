@@ -1,4 +1,5 @@
 import { LogOut, X } from "./icons";
+import { API_BASE_URL } from "../../config";
 
 export function LecturerConfirmModals({
   isLogoutOpen, setIsLogoutOpen, confirmLogout,
@@ -48,7 +49,7 @@ export function LecturerConfirmModals({
         <div className="lec-lightbox-overlay" onClick={() => setLightboxUrl(null)}>
           <div className="lec-lightbox-box" onClick={e => e.stopPropagation()}>
             <button className="lec-lightbox-close" onClick={() => setLightboxUrl(null)}><X size={16} /></button>
-            <img src={`http://localhost:5000${lightboxUrl}`} alt="Proof" />
+            <img src={`${API_BASE_URL}${lightboxUrl}`} alt="Proof" />
           </div>
         </div>
       )}

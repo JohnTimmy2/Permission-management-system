@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config";
 import "../styles/Login.css";
 
 const GRID_COLS = 12;
@@ -11,6 +12,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
 
   // Forgot password modal state
@@ -21,17 +23,19 @@ function Login() {
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleLogin = async () => {
+    setLoginError("");
     if (!email || !password) {
-      alert("Please fill all fields");
+      setLoginError("Please fill all fields.");
       return;
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/login", {
+      const res = await axios.post(`${API_BASE_URL}/login`, {
         email,
         password,
       });
 
+      localStorage.setItem("token", res.data.token);
       localStorage.setItem("user_id", res.data.user_id);
       localStorage.setItem("student_name", res.data.name);
       localStorage.setItem("role", res.data.role);
@@ -46,11 +50,11 @@ function Login() {
       } else if (role === "admin") {
         navigate("/admin-dashboard");
       } else {
-        alert("Unknown role: " + role);
+        setLoginError("Unknown role: " + role);
       }
     } catch (err) {
       console.log(err);
-      alert("Invalid Email or Password");
+      setLoginError("Invalid email or password.");
     }
   };
 
@@ -80,7 +84,7 @@ function Login() {
 
     setForgotLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/forgot-password", {
+      const res = await axios.post(`${API_BASE_URL}/forgot-password`, {
         email: forgotEmail,
       });
       setForgotStatus("success");
@@ -174,6 +178,10 @@ function Login() {
               Forgot password?
             </button>
           </div>
+
+          {loginError && (
+            <div className="forgot-message error">✕ {loginError}</div>
+          )}
 
           <button type="button" className="login-btn" onClick={handleLogin}>
             SIGN IN

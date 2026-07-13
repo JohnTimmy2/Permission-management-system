@@ -1,8 +1,11 @@
 import "dotenv/config";
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first"); // avoid ENETUNREACH on hosts without IPv6 egress (e.g. Gmail SMTP)
 import express from "express";
 import { setWebhook, notifyLecturer, renotifyLecturer, handleWebhook, linkForLecturer, BOT_USERNAME } from "./telegram-bot.js";
 import cors from "cors";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -13,7 +16,7 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const FRONTEND_URL = "http://localhost:5173";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 // Multer config — saves uploaded proof photos to /uploads on disk
 const storage = multer.diskStorage({
@@ -36,6 +39,40 @@ const upload = multer({
 
 app.use(cors());
 app.use(express.json());
+
+// ============================================================
+//  ACCESS CONTROL — JWT authentication + role-gated routes
+//  /login issues a signed JWT (user_id, role, name) on success. The client
+//  sends it back as `Authorization: Bearer <token>` (attached once by
+//  frontend/src/config.js). authenticateToken verifies the signature and
+//  expiry and attaches the decoded, trustworthy identity to req.user —
+//  requireRole then only has to check req.user.role, since it was already
+//  cryptographically verified rather than re-trusted from a client header.
+// ============================================================
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = "8h";
+
+function authenticateToken(req, res, next) {
+  const authHeader = req.header("authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) return res.status(401).json({ message: "Missing or invalid Authorization header" });
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ message: "Invalid or expired token" });
+    req.user = decoded; // { user_id, role, name }
+    next();
+  });
+}
+
+function requireRole(...allowedRoles) {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ message: "Not authenticated" });
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ message: "Forbidden: insufficient role" });
+    }
+    next();
+  };
+}
 
 // Serve uploaded photos as static files so the lecturer can view them
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -64,8 +101,15 @@ app.post("/login", (req, res) => {
     if (result.length === 0) return res.status(401).json("Email not found");
     if (result[0].password !== password) return res.status(401).json("Wrong Password");
 
+    const token = jwt.sign(
+      { user_id: result[0].user_id, role: result[0].role, name: result[0].name },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
     res.json({
       message: "Login Success",
+      token,
       user_id: result[0].user_id,
       name: result[0].name,
       role: result[0].role,
@@ -97,20 +141,19 @@ app.post("/forgot-password", (req, res) => {
       const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
       transporter.sendMail(
         {
-          from: process.env.GMAIL_USER,
+          from: "onboarding@resend.dev",
           to: email,
           subject: "Reset your password — Permission Request",
           html: `<p>Hi ${userName},</p>
             <p>We received a request to reset your password. Click the link below to choose a new one:</p>
             <p><a href="${resetLink}">${resetLink}</a></p>
             <p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`,
-        },
-        (mailErr) => {
-          if (mailErr) {
-            console.log("Email send error:", mailErr);
-            return res.status(500).json({ message: "Failed to send reset email. Please try again." });
-          }
+        }
+      ).then(() => {
           res.json({ message: "A password reset link has been sent to your email." });
+        }).catch((mailErr) => {
+          console.log("Email send error:", mailErr);
+          return res.status(500).json({ message: "Failed to send reset email. Please try again." });
         }
       );
     });
@@ -207,7 +250,7 @@ app.put("/request/:id", upload.single("proof_image"), (req, res) => {
 });
 
 // GET ALL REQUESTS (lecturer view)
-app.get("/requests", (req, res) => {
+app.get("/requests", authenticateToken, requireRole("lecturer", "admin"), (req, res) => {
   db.query("SELECT * FROM requests ORDER BY created_at DESC", (err, result) => {
     if (err) { console.log(err); return res.status(500).json("Database Error"); }
     res.json(result);
@@ -215,7 +258,7 @@ app.get("/requests", (req, res) => {
 });
 
 // UPDATE STATUS — now also accepts an optional reject_reason from the lecturer
-app.put("/request-status", (req, res) => {
+app.put("/request-status", authenticateToken, requireRole("lecturer", "admin"), (req, res) => {
   const { id, status, reject_reason } = req.body;
   const sql = "UPDATE requests SET status = ?, reject_reason = ? WHERE request_id = ?";
 
@@ -234,7 +277,7 @@ app.get("/student-requests/:studentId", (req, res) => {
 });
 
 // DELETE REQUEST
-app.delete("/delete-request/:id", (req, res) => {
+app.delete("/delete-request/:id", authenticateToken, requireRole("admin"), (req, res) => {
   db.query("DELETE FROM requests WHERE request_id = ?", [req.params.id], (err, result) => {
     if (err) { console.log("Delete Error:", err); return res.status(500).json("Delete Failed"); }
     if (result.affectedRows === 0) return res.status(404).json("Request Not Found");
@@ -270,7 +313,7 @@ app.put("/update-password/:studentId", (req, res) => {
    ========================================================================== */
 
 // GET ALL USERS (with their group name if they're a student)
-app.get("/users", (req, res) => {
+app.get("/users", authenticateToken, requireRole("admin"), (req, res) => {
   const sql = `
     SELECT u.user_id, u.name, u.email, u.role, g.group_name
     FROM users u
@@ -285,7 +328,7 @@ app.get("/users", (req, res) => {
 });
 
 // ADD NEW USER (and link to a group if they're a student)
-app.post("/users", (req, res) => {
+app.post("/users", authenticateToken, requireRole("admin"), (req, res) => {
   const { user_id, name, email, password, role, group_name, assignments } = req.body;
   if (!user_id || !name || !email || !password || !role) {
     return res.status(400).json({ message: "Missing required fields" });
@@ -329,7 +372,7 @@ app.post("/users", (req, res) => {
 });
 
 // EDIT USER (optionally change password, and re-link group for students)
-app.put("/users/:id", (req, res) => {
+app.put("/users/:id", authenticateToken, requireRole("admin"), (req, res) => {
   const { id } = req.params;
   const { name, email, password, role, group_name, assignments } = req.body;
 
@@ -386,7 +429,7 @@ app.put("/users/:id", (req, res) => {
 });
 
 // DELETE USER (clean up their group mapping first)
-app.delete("/users/:id", (req, res) => {
+app.delete("/users/:id", authenticateToken, requireRole("admin"), (req, res) => {
   const { id } = req.params;
   db.query("DELETE FROM student_groups WHERE student_id=?", [id], () => {
     db.query("DELETE FROM users WHERE user_id=?", [id], (err, result) => {
@@ -398,7 +441,7 @@ app.delete("/users/:id", (req, res) => {
 });
 
 // Fetch a lecturer's assignments so admin's Edit form can preload them
-app.get("/users/:id/assignments", (req, res) => {
+app.get("/users/:id/assignments", authenticateToken, requireRole("admin"), (req, res) => {
   db.query("SELECT subject_name, group_name FROM lecturer_assignments WHERE lecturer_id = ?", [req.params.id], (err, rows) => {
     if (err) { console.log(err); return res.status(500).json([]); }
     res.json(rows);
